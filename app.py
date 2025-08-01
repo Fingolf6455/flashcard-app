@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import openai
+from llm_client import LlmClient
 from dotenv import load_dotenv
 import os
 
@@ -8,8 +8,31 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Extract prompt as constant
+PROMPT_TEMPLATE = """You are a flashcard generator. Given the following study notes, create flashcards in JSON format.
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+Each flashcard should have:
+- question: A clear question based on the content
+- answer: The correct answer
+- hint: A helpful hint (optional)
+- tags: Relevant tags as an array
+
+Notes to process:
+{notes}
+
+Return only valid JSON array of flashcard objects. Example:
+[
+  {{
+    "question": "What is photosynthesis?",
+    "answer": "The process by which plants convert light energy into chemical energy",
+    "hint": "Think about how plants make food",
+    "tags": ["biology", "plants"]
+  }}
+]
+"""
+
+# Initialize LLM client
+llm_client = LlmClient()
 
 @app.route('/')
 def home():
@@ -65,54 +88,20 @@ def generate():
     
     notes = data['notes']
     
-    # this function creates a prompt for the AI to generate flashcards from the notes/user input
-    prompt = f"""
-You are a flashcard generator. Given the following study notes, create flashcards in JSON format.
-
-Each flashcard should have:
-- question: A clear question based on the content
-- answer: The correct answer
-- hint: A helpful hint (optional)
-- tags: Relevant tags as an array
-
-Notes to process:
-{notes}
-
-Return only valid JSON array of flashcard objects. Example:
-[
-  {{
-    "question": "What is photosynthesis?",
-    "answer": "The process by which plants convert light energy into chemical energy",
-    "hint": "Think about how plants make food",
-    "tags": ["biology", "plants"]
-  }}
-]
-"""
+    # Use the extracted prompt template
+    prompt = PROMPT_TEMPLATE.format(notes=notes)
     
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a helpful flashcard generator."},
-                {"role": "user", "content": prompt}
-            ],
-            max_completion_tokens=1000,
-            temperature=1
-        )
+        # Use the extracted LLM client
+        flashcards = llm_client.generate_flashcards(prompt)
+        return jsonify(flashcards)
         
-        # Extract and return raw response
-        raw_content = response.choices[0].message.content.strip()
-        
-        # Parse the JSON string and return as proper JSON response
-        import json
-        try:
-            flashcards = json.loads(raw_content)
-            return jsonify(flashcards)
-        except json.JSONDecodeError:
-            return jsonify({"error": "Failed to parse AI response as JSON", "raw_response": raw_content}), 500
-        
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 500
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 500
     except Exception as e:
-        return f"Error generating flashcards: {str(e)}", 500
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
