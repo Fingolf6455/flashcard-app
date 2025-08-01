@@ -103,8 +103,13 @@ Return only valid JSON array of flashcard objects. Example:
         # Extract and return raw response
         raw_content = response.choices[0].message.content.strip()
         
-        # Return raw string 
-        return raw_content
+        # Parse the JSON string and return as proper JSON response
+        import json
+        try:
+            flashcards = json.loads(raw_content)
+            return jsonify(flashcards)
+        except json.JSONDecodeError:
+            return jsonify({"error": "Failed to parse AI response as JSON", "raw_response": raw_content}), 500
         
     except Exception as e:
         return f"Error generating flashcards: {str(e)}", 500
