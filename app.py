@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from llm_client import LlmClient
+from utils import is_valid
 from dotenv import load_dotenv
 import os
 
@@ -88,12 +89,17 @@ def generate():
     
     notes = data['notes']
     
-    # Use the extracted prompt template
+    # Use extracted prompt template
     prompt = PROMPT_TEMPLATE.format(notes=notes)
     
     try:
-        # Use the extracted LLM client
+        # Use extracted LLM client
         flashcards = llm_client.generate_flashcards(prompt)
+        
+        # Simple validation check
+        if not is_valid(flashcards):
+            return jsonify({"error": "Invalid flashcards generated"}), 500
+        
         return jsonify(flashcards)
         
     except ValueError as e:
