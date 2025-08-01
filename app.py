@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from llm_client import LlmClient
 from utils import is_valid
 from dotenv import load_dotenv
@@ -37,50 +37,11 @@ llm_client = LlmClient()
 
 @app.route('/')
 def home():
-    return '''
-    <html>
-    <head><title>Flashcard Generator</title></head>
-    <body>
-        <h1>Flashcard Generator</h1>
-        <form id="noteForm">
-            <h3>Paste your study notes:</h3>
-            <textarea id="notes" rows="10" cols="80" placeholder="Enter your study notes here..."></textarea><br><br>
-            <button type="button" onclick="generateFlashcards()">Generate Flashcards</button>
-        </form>
-        
-        <div id="result" style="margin-top: 20px;"></div>
-        
-        <script>
-        function generateFlashcards() {
-            const notes = document.getElementById('notes').value;
-            if (!notes.trim()) {
-                alert('Please enter some notes!');
-                return;
-            }
-            
-            fetch('/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({notes: notes})
-            })
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('result').innerHTML = '<h3>Generated Flashcards:</h3><pre>' + data + '</pre>';
-            })
-            .catch(error => {
-                document.getElementById('result').innerHTML = '<h3>Error:</h3><pre>' + error + '</pre>';
-            });
-        }
-        </script>
-    </body>
-    </html>
-    '''
+    return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    """Giant function that does everything - this is the dirty spike"""
+    """generate flashcards from the notes/user input"""
     
     # Get the raw text from request
     data = request.get_json()
