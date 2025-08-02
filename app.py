@@ -9,29 +9,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Extract prompt as constant
-PROMPT_TEMPLATE = """You are a flashcard generator. Given the following study notes, create flashcards in JSON format.
-
-Each flashcard should have:
-- question: A clear question based on the content
-- answer: The correct answer
-- hint: A helpful hint (optional)
-- tags: Relevant tags as an array
-
-Notes to process:
-{notes}
-
-Return only valid JSON array of flashcard objects. Example:
-[
-  {{
-    "question": "What is photosynthesis?",
-    "answer": "The process by which plants convert light energy into chemical energy",
-    "hint": "Think about how plants make food",
-    "tags": ["biology", "plants"]
-  }}
-]
-"""
-
 # Initialize LLM client
 llm_client = LlmClient()
 
@@ -50,12 +27,9 @@ def generate():
     
     notes = data['notes']
     
-    # Use extracted prompt template
-    prompt = PROMPT_TEMPLATE.format(notes=notes)
-    
     try:
-        # Use extracted LLM client
-        flashcards = llm_client.generate_flashcards(prompt)
+        # Generate flashcards from notes (prompt formatting handled in LLM client)
+        flashcards = llm_client.generate_flashcards(notes)
         
         # Simple validation check
         if not is_valid(flashcards):
