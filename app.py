@@ -4,6 +4,7 @@ from utils import is_valid
 from models import db, Card
 from dotenv import load_dotenv
 import os
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,7 +48,25 @@ def generate():
         if not is_valid(flashcards):
             return jsonify({"error": "Invalid flashcards generated"}), 500
         
-        return jsonify(flashcards)
+        # Save cards to database and return with IDs
+        saved_cards = []
+        for card_data in flashcards:
+            # Create new card instance
+            card = Card(
+                question=card_data['question'],
+                answer=card_data['answer'],
+                hint=card_data.get('hint'),
+                tags=json.dumps(card_data.get('tags', [])) if card_data.get('tags') else None
+            )
+            
+            # Save to database
+            db.session.add(card)
+            db.session.commit()
+            
+            # Add to response with ID
+            saved_cards.append(card.to_dict())
+        
+        return jsonify(saved_cards)
         
     except ValueError as e:
         return jsonify({"error": str(e)}), 500
