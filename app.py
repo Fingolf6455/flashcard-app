@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from llm_client import LlmClient
 from utils import is_valid
+from models import db, Card
 from dotenv import load_dotenv
 import os
 
@@ -8,6 +9,17 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flashcards.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize database
+db.init_app(app)
+
+# Create tables
+with app.app_context():
+    db.create_all()
 
 # Initialize LLM client
 llm_client = LlmClient()
