@@ -1,6 +1,6 @@
 import pytest
 import json
-from app import app
+from app import app, db
 
 @pytest.fixture
 def client():
@@ -12,7 +12,7 @@ def client():
 def test_generate_flashcards_returns_json(client):
     """Integration test that /generate endpoint returns valid JSON from real LLM"""
     
-    # Test data - simple concept for reliable response
+    # Test data 
     test_notes = "Water freezes at 0 degrees Celsius and boils at 100 degrees Celsius."
     
     # Make POST request to /generate
@@ -33,8 +33,11 @@ def test_generate_flashcards_returns_json(client):
     flashcard = json_data[0]
     assert "question" in flashcard, "Flashcard should have a question"
     assert "answer" in flashcard, "Flashcard should have an answer"
+    assert "id" in flashcard, "Flashcard should have a database ID"
     assert isinstance(flashcard.get("tags", []), list), "Tags should be a list"
+    assert isinstance(flashcard["id"], int), "ID should be an integer"
     
     # Basic content validation
     assert len(flashcard["question"]) > 0, "Question should not be empty"
     assert len(flashcard["answer"]) > 0, "Answer should not be empty"
+    assert flashcard["id"] > 0, "ID should be positive"
