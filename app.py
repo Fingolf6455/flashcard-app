@@ -51,19 +51,20 @@ def generate():
         # Save cards to database and return with IDs
         saved_cards = []
         for card_data in flashcards:
-            # Create new card instance
+            # Create new card instance from LLM-generated data
             card = Card(
                 question=card_data['question'],
                 answer=card_data['answer'],
-                hint=card_data.get('hint'),
+                hint=card_data.get('hint'),  # Optional field
+                # Store tags as JSON string for database compatibility
                 tags=json.dumps(card_data.get('tags', [])) if card_data.get('tags') else None
             )
             
-            # Save to database
+            # Save to database (each card gets a unique ID)
             db.session.add(card)
             db.session.commit()
             
-            # Add to response with ID
+            # Add to response with database ID for frontend display
             saved_cards.append(card.to_dict())
         
         return jsonify(saved_cards)
@@ -74,6 +75,42 @@ def generate():
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
+@app.route('/cards', methods=['GET'])
+def get_all_cards():
+    """Get all saved cards from database, ordered by creation date (newest first)
+    
+    Returns:
+        JSON array of all flashcard objects with their database IDs
+        Used by frontend to display saved cards collection
+    """
+    try:
+        # Fetch all cards ordered by creation date (newest first)
+        cards = Card.query.order_by(Card.created_at.desc()).all()
+        # Convert to dictionaries for JSON serialization
+        return jsonify([card.to_dict() for card in cards])
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving cards: {str(e)}"}), 500
+
+@app.route('/cards/<int:card_id>', methods=['GET'])
+def get_card(card_id):
+    """Get a specific card by its database ID
+    
+    Args:
+        card_id (int): Database ID of the flashcard to retrieve
+        
+    Returns:
+        JSON object of the specific flashcard, or 404 if not found
+        Used for individual card access and future study mode features
+    """
+    try:
+        # Look up card by primary key
+        card = db.session.get(Card, card_id)
+        if not card:
+            return jsonify({"error": "Card not found"}), 404
+        return jsonify(card.to_dict())
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving card: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
