@@ -105,12 +105,47 @@ function displayFlashcards(flashcards) {
     resultDiv.innerHTML = html;
 }
 
+/**
+ * Start study mode for a specific card
+ * @param {number} cardId - Database ID of the card to study
+ */
 function startStudyMode(cardId) {
-    alert(`Study mode for card ${cardId} - Coming soon!`);
+    // For individual card study, fetch the specific card and display in study mode
+    fetch(`/cards/${cardId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error loading card: ' + data.error);
+            } else {
+                displayStudyCard(data);
+            }
+        })
+        .catch(error => {
+            alert('Network error: ' + error.message);
+        });
 }
 
+/**
+ * Start a full study session with random cards
+ * Fetches random cards one by one for studying
+ */
 function startStudySession() {
-    alert('Study session for all cards - Coming soon!');
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '<h3>Loading study session...</h3>';
+    
+    // Fetch a random card for studying
+    fetch('/study')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultDiv.innerHTML = '<h3>No cards to study</h3><p>Generate some flashcards first!</p>';
+            } else {
+                displayStudyCard(data);
+            }
+        })
+        .catch(error => {
+            resultDiv.innerHTML = '<h3>Error:</h3><pre>Network error: ' + error.message + '</pre>';
+        });
 }
 
 /**
@@ -234,4 +269,95 @@ function displaySavedCards(cards) {
     `;
     
     resultDiv.innerHTML = html;
+}
+/**
+ * Display a single card in study mode with study interface
+ */
+function displayStudyCard(card) {
+    const resultDiv = document.getElementById('result');
+    
+    const tags = card.tags && card.tags.length > 0 ? 
+        card.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+    
+    const html = `
+        <div class="study-mode">
+            <h3>Study Session</h3>
+            <div class="study-card">
+                <div class="card-header">
+                    <span class="card-number">Card ${card.id}</span>
+                    <span class="study-label">Study Mode</span>
+                </div>
+                
+                <div class="card-content">
+                    <div class="question-section">
+                        <h4>Question:</h4>
+                        <p class="study-question">${card.question}</p>
+                    </div>
+                    
+                    <div class="answer-section">
+                        <h4>Answer:</h4>
+                        <p class="answer blurred" onclick="revealAnswer(this)">${card.answer}</p>
+                        <span class="reveal-hint">Click to reveal answer</span>
+                    </div>
+                    
+                    ${card.hint ? `
+                        <div class="hint-section">
+                            <h4>Need a hint?</h4>
+                            <p class="hint blurred" onclick="revealHint(this)">${card.hint}</p>
+                            <span class="reveal-hint">Click to reveal hint</span>
+                        </div>
+                    ` : ''}
+                    
+                    ${tags ? `
+                        <div class="tags-section">
+                            <h4>Tags:</h4>
+                            <div class="tags">${tags}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="study-actions">
+                    <button class="study-btn easy" onclick="markStudied(${card.id}, 'easy')">
+                        ✓ I knew it!
+                    </button>
+                    <button class="study-btn hard" onclick="markStudied(${card.id}, 'hard')">
+                        ✗ I didn't know it
+                    </button>
+                </div>
+            </div>
+            
+            <div class="study-navigation">
+                <button onclick="startStudySession()">Next Random Card</button>
+                <button onclick="viewAllSavedCards()">Back to All Cards</button>
+            </div>
+        </div>
+    `;
+    
+    resultDiv.innerHTML = html;
+}
+
+/**
+ * Mark a card as studied and get next card
+ */
+function markStudied(cardId, difficulty) {
+    fetch(`/study/${cardId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({difficulty: difficulty})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            const resultDiv = document.getElementById('result');
+            const feedback = difficulty === 'easy' ? 
+                '<h3>Great! 🎉</h3><p>Loading next card...</p>' : 
+                '<h3>Keep practicing! 💪</h3><p>Loading next card...</p>';
+            resultDiv.innerHTML = feedback;
+            
+            setTimeout(() => startStudySession(), 1500);
+        }
+    })
+    .catch(error => alert('Network error: ' + error.message));
 }

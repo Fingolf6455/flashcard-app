@@ -269,3 +269,95 @@ button:hover {
 .hint-section .reveal-hint {
     color: #856404;             /* Yellow/brown for hints */
 }
+
+/* Study Mode Styles */
+.study-mode {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.study-card {
+    background: white;
+    border: 3px solid #007bff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,123,255,0.2);
+    margin-bottom: 20px;
+}
+
+.study-label {
+    background: #007bff;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.study-question {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c5aa0;
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 5px solid #007bff;
+}
+
+.study-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 25px 0;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+
+.study-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.study-btn.easy {
+    background: #28a745;
+    color: white;
+}
+
+.study-btn.easy:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.study-btn.hard {
+    background: #dc3545;
+    color: white;
+}
+
+.study-btn.hard:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.study-navigation {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.study-navigation button {
+    margin: 0 10px;
+    background: #6c757d;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.study-navigation button:hover {
+    background: #5a6268;
+}

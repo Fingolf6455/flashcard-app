@@ -112,5 +112,52 @@ def get_card(card_id):
     except Exception as e:
         return jsonify({"error": f"Error retrieving card: {str(e)}"}), 500
 
+@app.route('/study', methods=['GET'])
+def get_random_card():
+    """Get a random card for study session
+    
+    Returns:
+        JSON object of a random flashcard for studying
+        Returns 404 if no cards exist in database
+    """
+    try:
+        # Get total count of cards
+        total_cards = Card.query.count()
+        if total_cards == 0:
+            return jsonify({"error": "No cards available for study"}), 404
+        
+        # Get a random card using SQL RANDOM() function
+        random_card = Card.query.order_by(db.func.random()).first()
+        return jsonify(random_card.to_dict())
+    except Exception as e:
+        return jsonify({"error": f"Error getting study card: {str(e)}"}), 500
+
+@app.route('/study/<int:card_id>', methods=['POST'])
+def mark_card_studied(card_id):
+    """Mark a card as studied (simple tracking for now)
+    
+    Args:
+        card_id (int): Database ID of the card that was studied
+        
+    Returns:
+        JSON confirmation that card was marked as studied
+        This is a placeholder for future spaced repetition features
+    """
+    try:
+        # Verify card exists
+        card = db.session.get(Card, card_id)
+        if not card:
+            return jsonify({"error": "Card not found"}), 404
+        
+        # For now, just return success (future: update last_reviewed, etc.)
+        from datetime import datetime
+        return jsonify({
+            "message": f"Card {card_id} marked as studied",
+            "card_id": card_id,
+            "studied_at": datetime.utcnow().isoformat()
+        })
+    except Exception as e:
+        return jsonify({"error": f"Error marking card as studied: {str(e)}"}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
