@@ -29,13 +29,14 @@ Return only valid JSON array of flashcard objects. Example:
 ]
 """
 
+
 class LlmClient:
     """Client for interacting with OpenAI LLM for flashcard generation"""
-    
+
     def __init__(self):
-        self.api_key = os.getenv('OPENAI_API_KEY')
+        self.api_key = os.getenv("OPENAI_API_KEY")
         openai.api_key = self.api_key
-    
+
     def generate_flashcards(self, notes):
         """Generate flashcards from study notes"""
         # Format the prompt with user's notes
@@ -44,20 +45,23 @@ class LlmClient:
             response = openai.ChatCompletion.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a helpful flashcard generator."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are a helpful flashcard generator.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 max_completion_tokens=1000,
-                temperature=1
+                temperature=1,
             )
-            
+
             # Extract raw response
             raw_content = response.choices[0].message.content.strip()
-            
+
             # Parse JSON and return
             flashcards = json.loads(raw_content)
             return flashcards
-            
+
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse AI response as JSON: {str(e)}")
         except Exception as e:
