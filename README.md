@@ -1,6 +1,6 @@
-# Flashcard Generator App
+# AI Flashcard Generator with Spaced Repetition
 
-A  flashcard application that uses OpenAI's GPT-4 to automatically generate study cards from your notes.
+A sophisticated flashcard application that uses OpenAI's GPT-4 to automatically generate study cards from your notes. Features intelligent spaced repetition algorithms for optimal learning efficiency.
 
 ## Table of Contents
 - [Quick Start](#quick-start)
@@ -16,8 +16,8 @@ A  flashcard application that uses OpenAI's GPT-4 to automatically generate stud
 
 ```bash
 # Clone and setup
-git clone <repository-url>
-cd "Clean Code und Automated testing"
+git clone https://github.com/Fingolf6455/flashcard-app.git
+cd flashcard-app
 
 # Setup virtual environment
 python -m venv venv
@@ -93,15 +93,18 @@ Visit `http://localhost:5000` to use the application.
 
 ### What It Does
 - **AI-Powered Generation**: Converts study notes into structured flashcards using GPT-4
+- **Spaced Repetition Algorithm**: Intelligent scheduling based on your performance (wrong = 1 day, right = 3 days)
 - **Interactive Study Mode**: Click-to-reveal answers with difficulty tracking
+- **Progress Analytics**: Track review statistics, completion rates, and ease factors
 - **Persistent Storage**: SQLite database stores all cards with timestamps
 - **Modern UI**: Beautiful, responsive interface with smooth animations
 
 ### Use Cases Implemented
 1. **Content Generation**: Transform unstructured notes into structured flashcards
-2. **Study Sessions**: Interactive review with self-assessment
-3. **Progress Tracking**: Mark cards as known/unknown for future algorithms
-4. **Card Management**: View, organize, and access all saved flashcards
+2. **Intelligent Study Sessions**: Cards appear when they're due for review, not randomly
+3. **Spaced Repetition Learning**: Difficult cards appear more frequently, easy cards less often
+4. **Progress Analytics**: Track study statistics, completion rates, and learning efficiency
+5. **Card Management**: View, organize, and access all saved flashcards
 
 ## Clean Code Principles
 
@@ -306,13 +309,15 @@ def test_generate_flashcards_success(self, mock_openai_create):
 ├── app.py              # Flask routes and HTTP handling
 ├── llm_client.py       # OpenAI API integration
 ├── models.py           # Database models and serialization
+├── scheduler.py        # Spaced repetition algorithms
 ├── utils.py            # Validation and utility functions
 ├── templates/          # HTML templates (MVC separation)
 ├── static/             # CSS and JavaScript assets
 └── tests/              # Comprehensive test suite
-    ├── test_app.py     # Integration tests
-    ├── test_database.py # Database integration tests
-    └── test_*_unit.py  # Unit tests with mocking
+    ├── test_app.py        # Integration tests
+    ├── test_database.py   # Database integration tests
+    ├── test_scheduler_unit.py # Spaced repetition unit tests
+    └── test_*_unit.py     # Unit tests with mocking
 ```
 
 ### Design Patterns
@@ -324,8 +329,19 @@ def test_generate_flashcards_success(self, mock_openai_create):
 ### Key Design Decisions
 1. **SQLite for Development**: Simple setup, file-based persistence
 2. **OpenAI Integration**: Real AI capabilities with proper error handling
-3. **Comprehensive Testing**: Unit and integration tests for reliability
-4. **Clean Architecture**: Modular design for maintainability
+3. **Spaced Repetition Algorithm**: Simple but effective scheduling (foundation for SM-2)
+4. **Comprehensive Testing**: Unit and integration tests for reliability
+5. **Clean Architecture**: Modular design for maintainability
+
+### Spaced Repetition Algorithm
+The app implements a simple but effective spaced repetition system:
+
+- **Easy cards** (you knew the answer): Review again in **3 days**
+- **Hard cards** (you didn't know): Review again **tomorrow**
+- **Ease factor tracking**: Cards get easier/harder based on your performance
+- **Progress statistics**: Track your learning efficiency over time
+
+This provides the foundation for more advanced algorithms like SM-2 while keeping the logic simple and testable.
 
 ---
 
