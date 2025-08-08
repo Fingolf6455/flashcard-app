@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from llm_client import LlmClient
 from utils import is_valid
 from models import db, Card
+from scheduler import SpacedRepetitionScheduler, get_next_study_card
 from dotenv import load_dotenv
 import json
 
@@ -119,36 +120,35 @@ def get_card(card_id):
 
 
 @app.route("/study", methods=["GET"])
-def get_random_card():
-    """Get a random card for study session
-
+def get_next_study_card_endpoint():
+    """Get the next card due for review using spaced repetition logic
+    
     Returns:
-        JSON object of a random flashcard for studying
-        Returns 404 if no cards exist in database
+        JSON object of the next flashcard that should be studied
+        Returns 404 if no cards are due for review
     """
     try:
-        # Get total count of cards
-        total_cards = Card.query.count()
-        if total_cards == 0:
-            return jsonify({"error": "No cards available for study"}), 404
+        # Get next card based on spaced repetition algorithm
+        next_card = get_next_study_card()
+        
+        if not next_card:
+            return jsonify({"error": "No cards due for review right now"}), 404
 
-        # Get a random card using SQL RANDOM() function
-        random_card = Card.query.order_by(db.func.random()).first()
-        return jsonify(random_card.to_dict())
+        return jsonify(next_card.to_dict())
     except Exception as e:
         return jsonify({"error": f"Error getting study card: {str(e)}"}), 500
 
 
 @app.route("/study/<int:card_id>", methods=["POST"])
 def mark_card_studied(card_id):
-    """Mark a card as studied (simple tracking for now)
-
+    """Mark a card as studied and update spaced repetition schedule
+    
     Args:
         card_id (int): Database ID of the card that was studied
-
+        
     Returns:
-        JSON confirmation that card was marked as studied
-        This is a placeholder for future spaced repetition features
+        JSON confirmation with updated review schedule
+        Uses spaced repetition: wrong = 1 day, right = 3 days
     """
     try:
         # Verify card exists
@@ -156,18 +156,37 @@ def mark_card_studied(card_id):
         if not card:
             return jsonify({"error": "Card not found"}), 404
 
-        # For now, just return success (future: update last_reviewed, etc.)
-        from datetime import datetime
-
-        return jsonify(
-            {
-                "message": f"Card {card_id} marked as studied",
-                "card_id": card_id,
-                "studied_at": datetime.utcnow().isoformat(),
-            }
-        )
+        # Get difficulty from request body
+        data = request.get_json() or {}
+        difficulty = data.get('difficulty', 'hard')  # Default to hard if not specified
+        
+        # Update card using spaced repetition logic
+        updated_card = SpacedRepetitionScheduler.update_card_review(card, difficulty)
+        
+        return jsonify({
+            "message": f"Card {card_id} reviewed and scheduled",
+            "card_id": card_id,
+            "difficulty": difficulty,
+            "next_review": updated_card.next_review.isoformat(),
+            "review_count": updated_card.review_count,
+            "ease_factor": updated_card.ease_factor
+        })
     except Exception as e:
         return jsonify({"error": f"Error marking card as studied: {str(e)}"}), 500
+
+
+@app.route("/study/stats", methods=["GET"])
+def get_study_statistics():
+    """Get study progress statistics
+    
+    Returns:
+        JSON object with review statistics and progress tracking
+    """
+    try:
+        stats = SpacedRepetitionScheduler.get_review_statistics()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({"error": f"Error getting statistics: {str(e)}"}), 500
 
 
 if __name__ == "__main__":

@@ -59,9 +59,13 @@ class TestCardToDictMethod:
             hint="Think about web development",
             tags=json.dumps(["python", "web", "framework"]),
         )
-        # Mock the created_at field
+        # Mock all fields including spaced repetition
         card.id = 42
         card.created_at = datetime(2023, 8, 15, 10, 30, 45)
+        card.last_reviewed = None
+        card.next_review = None
+        card.review_count = 0
+        card.ease_factor = 2.5
 
         result = card.to_dict()
 
@@ -72,6 +76,10 @@ class TestCardToDictMethod:
             "hint": "Think about web development",
             "tags": ["python", "web", "framework"],
             "created_at": "2023-08-15T10:30:45",
+            "last_reviewed": None,
+            "next_review": None,
+            "review_count": 0,
+            "ease_factor": 2.5,
         }
 
         assert result == expected
@@ -81,6 +89,10 @@ class TestCardToDictMethod:
         card = Card(question="What is 2+2?", answer="4")
         card.id = 1
         card.created_at = datetime(2023, 8, 15, 12, 0, 0)
+        card.last_reviewed = None
+        card.next_review = None
+        card.review_count = 0
+        card.ease_factor = 2.5
 
         result = card.to_dict()
 
@@ -91,6 +103,10 @@ class TestCardToDictMethod:
             "hint": None,
             "tags": [],
             "created_at": "2023-08-15T12:00:00",
+            "last_reviewed": None,
+            "next_review": None,
+            "review_count": 0,
+            "ease_factor": 2.5,
         }
 
         assert result == expected
